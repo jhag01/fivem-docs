@@ -1,0 +1,24 @@
+---
+title: Persistence & Restarts
+description: How the schedule survives a restart, and migrating from dots-happyhour
+---
+
+Every add, edit, and removal is immediately written to a single `ResourceKvp` — there's no database requirement.
+
+## What's stored
+
+The entire `happyHours` table (every activity's current entry, one-time or recurring) is JSON-encoded into the `happyHour:activeHours` KVP key on every change. If the table is ever empty, the key is deleted entirely rather than storing `{}`.
+
+On boot, it's loaded back and filtered:
+
+- Recurring entries are always kept — they have no expiry of their own.
+- One-time entries are kept only if `endTime` is still in the future; already-expired ones are dropped silently.
+- A one-time entry missing `startTime` (shouldn't normally happen) gets it backfilled to the current time rather than being dropped.
+
+## Migrating from dots-happyhour
+
+If happyHour was previously installed as `dots-happyhour`, its schedule is carried over automatically: on first boot, if the new `happyHour:activeHours` key doesn't exist yet, the old `dots-happyhour:activeHours` key is read instead, migrated into the new format, saved under the new key, and the old key is deleted.
+
+<Callout type="info">
+  No manual action is needed — this happens transparently on the first start after upgrading. It only runs once, since after that the new key exists and the old one is already gone.
+</Callout>

@@ -1,0 +1,29 @@
+---
+title: Overview
+description: A Happy Hour system for FiveM activities, with framework support for ESX, Qbox, and standalone servers
+---
+
+happyHour lets staff temporarily boost (or penalize) XP/payout-style multipliers for specific activities — "police get 2x this weekend" or "fishing is 0.5x tonight" — through an in-game menu, with the schedule persisted across restarts and exposed to other resources via exports and events.
+
+## Features
+
+- **Framework-aware activities** — auto-pulls jobs from ESX or Qbox, or define your own standalone/custom activity list
+- **Sad Hours** — the same multiplier field doubles as a penalty: anything below `1.0` is a debuff instead of a bonus
+- **One-time or recurring** — schedule a single window, or a weekly recurring one (including windows that cross midnight)
+- **Editable entries** — adjust the time or multiplier on an existing entry without deleting and recreating it
+- **Notifications** — broadcast or job-filtered announcements when an entry starts or ends
+- **Live hooks** — events and exports for other resources to react without polling
+- **Persistent** — schedule survives a resource restart via `ResourceKvp`
+- **Quick command** — `/happyhour quick <activity> <minutes> <multiplier>` for a one-off boost without opening the menu
+
+## How it works, at a glance
+
+Entries live in a single in-memory table on the server, persisted to a KVP on every change. A 30-second server thread does two jobs in one pass: prunes expired one-time entries, and diffs each entry's active/inactive state to fire start/end events and notifications exactly once per transition. Which activities are manageable at all comes from [Activities](/happyhour/activities/) — a merge of your framework's jobs (if any), a whitelist, and your own custom entries.
+
+## Next steps
+
+<Cards>
+  <Card title="Installation" href="/happyhour/installation/" description="Get happyHour running" />
+  <Card title="Configuration" href="/happyhour/configuration/" description="Framework, command, and notifications" />
+  <Card title="Activities" href="/happyhour/activities/" description="What can get a happy hour" />
+</Cards>

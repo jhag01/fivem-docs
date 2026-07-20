@@ -1,0 +1,60 @@
+---
+title: Activities
+description: What can get a happy hour, and where the list comes from
+---
+
+An "activity" is just an identifier a happy hour entry attaches to (a job name, or anything you make up). What's available to pick in the menu depends on `Settings.Framework`.
+
+## Standalone
+
+```lua
+Settings = {
+    standaloneActivities = {
+        ['police'] = { label = 'Police' },
+        ['ambulance'] = { label = 'Ambulance' },
+        ['mechanic'] = { label = 'Mechanics' },
+        ['taxi'] = { label = 'Taxi Drivers' },
+        ['firefighter'] = { label = 'Firefighters' },
+    },
+}
+```
+
+With `Settings.Framework = 'standalone'`, this list *is* the full activity list — nothing else is merged in.
+
+## ESX / Qbox
+
+With `Settings.Framework = 'esx'` or `'qbx'`, the base list comes from your framework's jobs (`ESX.GetJobs()` / `exports.qbx_core:GetJobs()`), filtered down to a whitelist:
+
+```lua
+Settings = {
+    whitelistActivities = { -- only these framework jobs are selectable
+        ['police'] = true,
+        ['ambulance'] = true,
+    },
+}
+```
+
+<Callout type="info">
+  On boot, happyHour waits for `es_extended`/`qbx_core` to actually reach the `'started'` resource state (and for the framework to report at least one job) before building this list, rather than checking once and giving up — so start order relative to your framework doesn't matter.
+</Callout>
+
+## Custom activities
+
+Merged in regardless of framework — use these for anything that isn't a job at all:
+
+```lua
+Settings = {
+    customActivities = {
+        ['robbery'] = { label = 'Armed Robbery' },
+        ['fishing'] = { label = 'Commercial Fishing' },
+    },
+}
+```
+
+## Labels
+
+If an activity has no `label` (or an empty one), happyHour derives one from the key automatically — underscores become spaces, and each word is title-cased (`drug_dealer` → `Drug Dealer`).
+
+## Next steps
+
+Head to [Commands](/happyhour/commands/) to actually schedule a happy hour for one of these activities.

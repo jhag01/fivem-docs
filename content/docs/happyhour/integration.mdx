@@ -1,0 +1,51 @@
+---
+title: Integration
+description: Exports and events for other resources to react to happy hours
+---
+
+## Exports
+
+```lua
+-- Check one activity, or get the state of everything at once
+-- With an activity name: returns isActive (boolean), multiplier (number, 1.0 if inactive)
+-- With no argument: returns a table of { [activityName] = multiplier } for every currently active entry
+exports.happyHour:isHappyHour(activityName)
+
+-- Same shape as calling isHappyHour() with no argument — just a more discoverable name
+exports.happyHour:GetActiveHappyHours()
+```
+
+```lua
+-- Apply an activity's current multiplier to a payout
+local isActive, multiplier = exports.happyHour:isHappyHour('police')
+local payout = basePayout * (isActive and multiplier or 1.0)
+```
+
+```lua
+-- Snapshot every active entry at once
+local active = exports.happyHour:GetActiveHappyHours()
+for activityName, multiplier in pairs(active) do
+    print(activityName, 'is at', multiplier .. 'x')
+end
+```
+
+## Events
+
+Rather than polling the exports above, other resources can listen for transitions directly:
+
+```lua
+-- isPenalty is true when multiplier < 1 (a Sad Hour)
+AddEventHandler('happyHour:server:started', function(activityName, multiplier, isPenalty)
+    print(activityName, 'started at', multiplier .. 'x', isPenalty and '(penalty)' or '(bonus)')
+end)
+
+AddEventHandler('happyHour:server:ended', function(activityName)
+    print(activityName, 'ended')
+end)
+```
+
+Both fire from the same ~30-second server thread that also handles expiry and notifications, exactly once per state transition (not once per tick) — one-time and recurring entries are treated identically here.
+
+<Callout type="info">
+  On a resource (re)start, entries that are already active don't fire a spurious `started` event — the thread's first pass only records the current state, it doesn't treat "already active" as "just started". You'll only see `started`/`ended` for genuine transitions from that point on.
+</Callout>

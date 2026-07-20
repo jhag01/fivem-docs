@@ -1,0 +1,43 @@
+---
+title: Installation
+description: Installing happyHour
+---
+
+## Requirements
+
+- [ox_lib](https://github.com/overextended/ox_lib)
+- Qbox (`qbx_core`) or ESX (`es_extended`) — optional, only needed for framework-based activities. Standalone servers need neither.
+
+## Installation
+
+<Steps>
+<Step>
+
+### Download
+
+Download or clone the repository into your `resources/` folder.
+
+</Step>
+<Step>
+
+### Pick a framework
+
+Open `settings.lua` and set `Settings.Framework` to `'esx'`, `'qbx'`, or `'standalone'`. If you're using ESX, also uncomment the `@es_extended/imports.lua` line in `fxmanifest.lua`'s `shared_scripts`.
+
+See [Activities](/happyhour/activities/) for how this choice affects which activities are available.
+
+</Step>
+<Step>
+
+### Add it to `server.cfg`
+
+```
+ensure happyHour
+```
+
+</Step>
+</Steps>
+
+## Next steps
+
+Head to [Configuration](/happyhour/configuration/) for the rest of `settings.lua`, or [Activities](/happyhour/activities/) to set up what staff can actually schedule a happy hour for.

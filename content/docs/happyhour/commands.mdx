@@ -1,0 +1,48 @@
+---
+title: Commands
+description: The in-game menu and the quick command shortcut
+---
+
+## `/happyhour`
+
+Opens the management menu (command name is configurable — see [Configuration](/happyhour/configuration/#command-and-permissions)). Requires permission, same as every path documented below.
+
+The menu has three options:
+
+- **View Active Happy Hours** — lists every current entry, active ones first. Selecting one opens an Edit/Remove submenu.
+- **Add Happy Hour** — a one-time window: pick activities, a from/to date and time, and a multiplier.
+- **Add Recurring Event** — a weekly window: pick activities, a weekday, a from/to time, and a multiplier.
+
+## Sad Hours
+
+The multiplier field accepts `0.1`–`10` in both dialogs. Anything below `1.0` is a **Sad Hour** — a penalty instead of a bonus — using the exact same entry shape and menu flow. Active penalties show with a distinct orange "frown" icon in View Active, versus the green checkmark for an active bonus.
+
+## One-time vs. recurring
+
+| | One-time | Recurring |
+|---|---|---|
+| Shape | Absolute `startTime`/`endTime` | `weekday` + time-of-day `startMinute`/`endMinute` |
+| Expires on its own | Yes | No — repeats every week until removed |
+| End before start | Rejected | Allowed — wraps past midnight |
+
+A recurring window where the end time-of-day is earlier than the start (e.g. Friday `22:00`–`02:00`) is treated as crossing midnight: active late on the chosen weekday, and again early the *following* day. Only a truly zero-length window (`end == start`) is rejected — a one-time entry, by contrast, always requires the end to be strictly after both the start and the current time.
+
+## Editing and removing
+
+From **View Active**, selecting an entry opens an Edit/Remove submenu:
+
+- **Edit** reopens the same add dialog (one-time or recurring, matching the entry's existing kind), pre-filled with its current values. Only the time and multiplier are editable — the activity itself is the entry's identity, so changing which activity it applies to means creating a new entry instead.
+- **Remove** asks for confirmation, then deletes the entry immediately.
+
+## Quick command
+
+```
+/happyhour quick <activity> <minutes> <multiplier>
+```
+
+Sets a one-time happy (or sad) hour starting immediately, for the given number of minutes, bypassing the dialog entirely. `multiplier` defaults to `2` if omitted. Feedback (success or the specific validation error) is sent back to you as a chat notification.
+
+```
+/happyhour quick police 30 2
+/happyhour quick fishing 15 0.5
+```

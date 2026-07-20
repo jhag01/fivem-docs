@@ -1,0 +1,56 @@
+---
+title: Configuration
+description: Framework, command, permissions, and notifications
+---
+
+All configuration lives in `settings.lua`.
+
+## Framework
+
+```lua
+Settings = {
+    Framework = 'standalone', -- Options: 'esx', 'qbx', 'standalone'
+}
+```
+
+Determines where activities come from — see [Activities](/happyhour/activities/) for the full picture. When set to `'esx'`, also uncomment the `@es_extended/imports.lua` line in `fxmanifest.lua`.
+
+## Command and permissions
+
+```lua
+Settings = {
+    Command = {
+        acePermission = true, -- hides the command from chat autocomplete for players without the ACE permission
+        name = 'happyhour',
+    },
+
+    allowedGroups = { -- ESX (job/group) and Qbox (permission) frameworks: any of these may use the command
+        ['admin'] = true,
+        ['superadmin'] = true,
+    },
+}
+```
+
+<Callout type="info" title="acePermission only affects autocomplete">
+  `Command.acePermission` controls whether the command shows up in chat autocomplete for players without the `command.<name>` ACE permission — it doesn't gate anything by itself. The permission itself is always enforced by the same check regardless of this setting.
+</Callout>
+
+A player can run `/happyhour` (see [Commands](/happyhour/commands/)) if either of these is true:
+
+- They have the `command.<name>` ACE permission (e.g. `command.happyhour`)
+- Their framework role is in `allowedGroups` — checked via ESX's `xPlayer.getGroup()`, or Qbox's `exports.qbx_core:HasPermission(source, group)`
+
+On standalone (no `Bridge`), only the ACE permission applies.
+
+## Notifications
+
+```lua
+Settings = {
+    Notify = {
+        enabled = true,     -- broadcast when a bonus/penalty starts or ends
+        jobFiltered = false, -- only notify players whose job matches the activity
+    },
+}
+```
+
+With `jobFiltered = true`, only players whose job matches the activity name are notified — but it silently falls back to a broadcast to everyone whenever job-filtering wouldn't make sense: standalone/custom activities, frameworks with no bridge, or a framework activity where zero players currently match. This keeps a custom activity like `'fishing'` from ever notifying nobody just because no player has a job literally named `fishing`.
