@@ -1,0 +1,25 @@
+---
+title: Client Events
+description: Events fired client-side when a player's skills change
+---
+
+Listen to these events client-side to react to skill changes.
+
+```lua
+-- Fires when a player's XP changes (gain or loss)
+AddEventHandler('skillSystem:client:xpChanged', function(skillName, xp, level, amount)
+    -- skillName  string   the skill that changed
+    -- xp         number   new total XP
+    -- level      number   current level
+    -- amount     number   XP delta (positive = gain, negative = loss)
+end)
+
+-- Fires when a player's level changes (up or down)
+AddEventHandler('skillSystem:client:levelChanged', function(skillName, level, isUp)
+    -- skillName  string   the skill that changed
+    -- level      number   new level
+    -- isUp       boolean  true if leveled up, false if leveled down
+end)
+```
+
+These fire from the client's local cache, kept in sync by the server — use them to trigger client-side effects (sounds, animations, UI) in response to a change, not as a source of truth for granting anything of value. See [Security model](/skillsystem/exports/#security-model) for why.

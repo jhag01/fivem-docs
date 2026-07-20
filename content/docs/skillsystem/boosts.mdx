@@ -1,0 +1,126 @@
+---
+title: XP Boosts
+description: Temporary XP multipliers and debuffs from any script
+---
+
+Boosts temporarily multiply XP gains for one or more skills — positive for a boost, negative for a debuff (same `percent` field, just negated). Multiple active boosts affecting the same skill stack additively.
+
+They show up automatically in the UI: a small ring badge in the quick menu, a full card with label, affected skill(s), live countdown, and exact `%` in the full panel, and the affected skill's icon in the skill list tints green or red for as long as a boost or debuff is active on it.
+
+## Presets
+
+Define common boosts once in `settings.lua`:
+
+```lua
+Settings = {
+    Boosts = {
+        energydrink = {
+            label = 'Energy Drink',
+            icon = 'Zap',
+            percent = 50,
+            duration = 10 * 60 * 1000,
+            cooldown = 20 * 60 * 1000,
+            skills = 'all',
+        },
+        exhausted = {
+            label = 'Exhausted',
+            icon = 'BatteryLow',
+            percent = -30,
+            duration = 5 * 60 * 1000,
+            cooldown = 0,
+            skills = { 'stamina', 'strength' },
+        },
+    },
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `label` | string | Display name shown in the UI |
+| `icon` | string | A [Lucide](https://lucide.dev) icon name |
+| `percent` | number | XP gain modifier — `50` = +50% XP, `-30` = -30% XP (a debuff) |
+| `duration` | number | How long the boost lasts, in milliseconds |
+| `cooldown` | number | How long a player must wait before this exact boost can be applied again. `0` = no cooldown |
+| `skills` | table \| `'all'` | Skill names this boost applies to, or `'all'` |
+
+Then apply one from any resource:
+
+```lua
+exports.skillSystem:AddBoost(source, 'energydrink')
+```
+
+## Ad-hoc boosts
+
+Presets are entirely optional. Skip `settings.lua` and send a full definition inline instead — useful for one-off events or anything decided at runtime:
+
+```lua
+exports.skillSystem:AddBoost(source, 'weekend_event', {
+    label = 'Weekend Bonus',
+    icon = 'Sparkles',
+    percent = 100,
+    duration = 60 * 60 * 1000,
+    cooldown = 0,
+    skills = 'all',
+})
+```
+
+The third argument also works on top of a known preset, to override just a couple of its fields for that one application (e.g. a rarer version of the same item that lasts longer).
+
+## Cooldowns
+
+Every boost has its own cooldown, tracked per player. `AddBoost` returns `false, 'on_cooldown', remainingMs` while one is on cooldown, so the calling script can decide whether to consume the item:
+
+```lua
+local ok, reason, remainingMs = exports.skillSystem:AddBoost(source, 'energydrink')
+if not ok and reason == 'on_cooldown' then
+    -- don't consume the item, tell the player to wait remainingMs
+end
+```
+
+Different boosts don't share a cooldown — several can be active and stacking on the same skill at once.
+
+## ox_inventory integration
+
+`server/ox_inventory.lua` ships a ready-made bridge — no wrapper export of your own needed. Point an item's `server.export` at it and give the item a `boost` field:
+
+```lua
+-- ox_inventory/data/items.lua
+
+-- Use a preset from Settings.Boosts as-is
+['energydrink'] = {
+    label = 'Energy Drink',
+    weight = 200,
+    server = { export = 'skillSystem.useBoostItem' },
+    boost = 'energydrink',
+},
+
+-- Override a couple of fields on top of a preset — shares that preset's cooldown
+['energydrink_xl'] = {
+    label = 'Energy Drink XL',
+    weight = 250,
+    server = { export = 'skillSystem.useBoostItem' },
+    boost = { preset = 'energydrink', duration = 20 * 60 * 1000 },
+},
+
+-- Fully custom, one-off definition — no entry in Settings.Boosts needed
+['moonshine'] = {
+    label = 'Moonshine',
+    weight = 300,
+    server = { export = 'skillSystem.useBoostItem' },
+    boost = { label = 'Moonshine', icon = 'FlaskConical', percent = 25, duration = 15 * 60 * 1000, cooldown = 30 * 60 * 1000, skills = { 'drugs' } },
+},
+
+-- Multiple effects from one item (e.g. a buff and a debuff at once) — mix presets and custom
+-- definitions freely; each tracks its own cooldown and expires independently
+['moonshine_bad_batch'] = {
+    label = 'Moonshine (Bad Batch)',
+    weight = 300,
+    server = { export = 'skillSystem.useBoostItem' },
+    boost = {
+        'energydrink',
+        { label = 'Hangover', icon = 'BatteryLow', percent = -20, duration = 10 * 60 * 1000, skills = { 'stamina', 'strength' } },
+    },
+},
+```
+
+See [Exports](/skillsystem/exports/) for the full `AddBoost`/`RemoveBoost`/`GetActiveBoosts` API.

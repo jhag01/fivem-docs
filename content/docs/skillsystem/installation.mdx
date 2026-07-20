@@ -1,0 +1,80 @@
+---
+title: Installation
+description: Installing and building skillSystem
+---
+
+## Requirements
+
+Make sure these are installed and running before you start:
+
+- [oxmysql](https://github.com/overextended/oxmysql)
+- [ox_lib](https://github.com/overextended/ox_lib)
+- Qbox (`qbx_core`) or ESX (`es_extended`)
+
+## Installation
+
+<Steps>
+<Step>
+
+### Download
+
+Download or clone the repository into your `resources/` folder.
+
+</Step>
+<Step>
+
+### Build the UI
+
+```bash
+cd web
+npm install
+npm run build
+```
+
+</Step>
+<Step>
+
+### Add it to `server.cfg`
+
+```
+ensure skillSystem
+```
+
+</Step>
+<Step>
+
+### Set up the database
+
+Either let the resource auto-create the required table on start (the default), or run `db.sql` manually and set `AutoSeedDatabase = false` in `settings.lua`.
+
+</Step>
+<Step>
+
+### Restart your server
+
+</Step>
+</Steps>
+
+## Building the UI
+
+The UI source lives in `web/`. After making changes, rebuild it:
+
+```bash
+cd web
+npm run build
+```
+
+The built output goes to `nui/`, which is what FiveM actually loads. `nui/` is gitignored — only the `web/` source is committed.
+
+To iterate on the UI without needing FiveM running:
+
+```bash
+cd web
+npm run dev
+```
+
+Then open `http://localhost:5173` and use `window.dispatchEvent` from the browser console to simulate NUI messages.
+
+## Next steps
+
+Head to [Configuration](/skillsystem/configuration/) to set up `settings.lua`, or straight to [Defining Skills](/skillsystem/skills/) to add your own skills.

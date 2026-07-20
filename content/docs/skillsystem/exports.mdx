@@ -1,0 +1,155 @@
+---
+title: Exports
+description: The server and client export API, with examples and the security model
+---
+
+Use these exports from any other resource to interact with the skill system.
+
+## Server-side
+
+```lua
+-- Give XP to a player
+-- Returns: true, { xp, level, leveledUp, leveledDown } or false, reason
+exports['skillSystem']:GiveXP(source, skillName, amount)
+
+-- Remove XP from a player
+-- Returns: true, { xp, level, leveledUp, leveledDown } or false, reason
+exports['skillSystem']:RemoveXP(source, skillName, amount)
+
+-- Get a player's skill data
+-- Returns: { name, label, category, level, maxLevel, xp, currentXP, neededXP } or nil
+exports['skillSystem']:GetSkill(source, skillName)
+
+-- Get all skill data for a player
+-- Returns: table of skill data keyed by skill name, or nil
+exports['skillSystem']:GetAllSkills(source)
+
+-- Check whether a player meets a minimum level for a skill
+-- Returns: boolean
+exports['skillSystem']:HasLevel(source, skillName, level)
+
+-- Apply a boost (or debuff) to a player. boostId may reference a preset in Settings.Boosts,
+-- or be a brand new identifier as long as `overrides` supplies a full definition. Passing
+-- `overrides` alongside a known preset overrides just those fields for this application.
+-- Returns: true, or false, reason ('invalid_boost' | 'player_not_loaded' | 'on_cooldown'), and
+-- for 'on_cooldown', the remaining cooldown in milliseconds as a third value
+exports['skillSystem']:AddBoost(source, boostId, overrides)
+
+-- Manually clear an active boost before it naturally expires
+-- Returns: boolean (false if it wasn't active)
+exports['skillSystem']:RemoveBoost(source, boostId)
+
+-- Get a player's active boosts
+-- Returns: table keyed by boostId, each with { label, icon, percent, skills, duration, remaining }
+exports['skillSystem']:GetActiveBoosts(source)
+
+-- Check whether a specific boost is currently active for a player
+-- Returns: boolean
+exports['skillSystem']:HasActiveBoost(source, boostId)
+
+-- Check the remaining cooldown for a specific boost
+-- Returns: number (milliseconds, 0 if ready)
+exports['skillSystem']:GetBoostCooldown(source, boostId)
+```
+
+## Client-side
+
+<Callout type="warn" title="Not authoritative">
+  These read from the local client cache, which is kept in sync by the server but is **not** authoritative — a tampered client can return anything it wants from these. Use them for UX only (showing/hiding a prompt, disabling a `canUse` action). They must never be the only check standing between a player and something of value.
+</Callout>
+
+```lua
+-- Get the local player's level in a skill
+-- Returns: number (0 if not loaded)
+exports['skillSystem']:GetSkillLevel(skillName)
+
+-- Check whether the local player meets a minimum level
+-- Returns: boolean
+exports['skillSystem']:HasSkillLevel(skillName, level)
+
+-- Get the local player's cached data for a single skill
+-- Returns: table or nil
+exports['skillSystem']:GetSkill(skillName)
+
+-- Get the local player's cached data for all skills
+-- Returns: table keyed by skill name
+exports['skillSystem']:GetAllSkills()
+
+-- Get the local player's cached active boosts
+-- Returns: table keyed by boostId, each with { label, icon, percent, skills, duration, remaining }
+exports['skillSystem']:GetActiveBoosts()
+
+-- Check whether a specific boost is currently active, from the local cache
+-- Returns: boolean
+exports['skillSystem']:HasActiveBoost(boostId)
+```
+
+## Blocking exports
+
+Purely a local UX concern (e.g. don't let the panel pop open mid-cutscene, or suppress toasts while another resource's fullscreen NUI has focus) — there's no security implication to a player blocking or unblocking their own UI, so unlike the level-read exports above, these have no server-side equivalent and don't need one.
+
+```lua
+-- Prevent (or re-allow) the keybind from opening the quick menu / full panel.
+-- Does not close a panel that's already open — it only blocks new opens.
+-- Each calling resource's block is tracked independently, and is automatically
+-- cleared if that resource stops, so one resource can never strand the UI blocked.
+exports['skillSystem']:SetPanelBlocked(state) -- state: boolean
+exports['skillSystem']:IsPanelBlocked()       -- Returns: boolean
+
+-- Suppress (or re-allow) XP/level-up/level-down toast notifications.
+-- Tracked per calling resource the same way as SetPanelBlocked.
+exports['skillSystem']:SetNotifyBlocked(state) -- state: boolean
+exports['skillSystem']:IsNotifyBlocked()       -- Returns: boolean
+```
+
+## Examples
+
+```lua
+-- Give 100 fishing XP when a player catches a fish
+local success, result = exports['skillSystem']:GiveXP(source, 'fishing', 100)
+if success and result.leveledUp then
+    -- handle level up
+end
+
+-- Check a player's crafting level before allowing a recipe
+local skill = exports['skillSystem']:GetSkill(source, 'crafting')
+if skill and skill.level >= 10 then
+    -- allow the recipe
+end
+```
+
+```lua
+-- client-side: gate a target/menu option's canUse with the cached level
+canUse = function()
+    return exports['skillSystem']:HasSkillLevel('drugs', 5)
+end
+```
+
+```lua
+-- server-side: re-validate before actually granting anything of value —
+-- this runs in the event/callback that actually hands out the drugs
+RegisterNetEvent('mydrugs:server:pickup', function(source)
+    if not exports['skillSystem']:HasLevel(source, 'drugs', 5) then return end
+    -- give the drugs
+end)
+```
+
+```lua
+-- client-side: suppress the panel and toasts while a cutscene plays
+exports['skillSystem']:SetPanelBlocked(true)
+exports['skillSystem']:SetNotifyBlocked(true)
+
+-- ...cutscene ends...
+exports['skillSystem']:SetPanelBlocked(false)
+exports['skillSystem']:SetNotifyBlocked(false)
+```
+
+## Security model
+
+<Callout type="error" title="Never trust the client">
+  The client-side exports and `canUse` checks above are a convenience layer for UI/UX — they prevent a legitimate player from seeing options they can't use yet. They are **not** a security boundary. Every action that has real value (giving an item, granting money, unlocking a recipe) must independently re-check the player's level server-side, in the same handler that performs the action, using the server-side exports.
+</Callout>
+
+This mirrors how the [admin menu](/skillsystem/admin/) already works: the client caches a flag for snappy UI, but every privileged action is re-validated server-side regardless of what the client reports.
+
+There is no exported way for a client to grant itself XP, and intentionally so. Resources that award XP for an action (e.g. picking up drugs) already run that action's logic server-side — call `GiveXP`/`RemoveXP` directly from that same server-side handler rather than exposing a network path for the client to request XP.

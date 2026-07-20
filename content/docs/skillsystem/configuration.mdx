@@ -1,0 +1,143 @@
+---
+title: Configuration
+description: General settings.lua options
+---
+
+All configuration lives in `settings.lua`. Every option is documented with comments in the file itself — this page covers the general, non-skill options. For defining skills, categories, and decay, see [Defining Skills](/skillsystem/skills/). For boost presets, see [XP Boosts](/skillsystem/boosts/). For admin access, see [Admin Access](/skillsystem/admin/).
+
+## Framework and debug
+
+```lua
+Settings = {
+    -- 'auto' detects Qbox or ESX automatically, or set manually to 'qbox' / 'esx'
+    Framework = 'auto',
+
+    -- Detailed console logging for development. Keep false in production.
+    Debug = false,
+}
+```
+
+## Keybind and panel
+
+```lua
+Settings = {
+    -- Opens/closes the skills UI. Players can rebind under FiveM Key Bindings.
+    Keybind = 'Z',
+
+    -- How long (ms) the keybind must be held to open the full panel.
+    -- A tap opens/closes the quick menu, a hold opens the full panel.
+    KeybindHoldDuration = 500,
+
+    -- 'left' or 'right'
+    PanelSide = 'right',
+}
+```
+
+## Theme
+
+Optional UI color overrides. Leave a value commented out to keep the built-in default — any valid CSS color string works.
+
+```lua
+Settings = {
+    Theme = {
+        -- background = 'rgb(10, 10, 10)',
+        -- foreground = 'rgb(250, 250, 250)',
+        -- card = 'rgb(23, 23, 23)',
+        -- accent = 'rgb(64, 64, 64)',
+        -- border = 'rgb(40, 40, 40)',
+        -- progress = 'rgb(59, 130, 246)',
+        -- progressTrack = 'rgb(40, 40, 40)',
+        -- muted = 'rgb(120, 120, 120)',
+        -- danger = 'rgb(239, 68, 68)',
+        -- buttonText = '#fff',
+    },
+}
+```
+
+## Notifications
+
+```lua
+Settings = {
+    -- 'internal' (built-in, recommended), 'ox' (ox_lib), 'custom', or 'none'
+    Notification = 'internal',
+
+    -- 'top-left', 'top-right', or 'top'
+    NotificationPosition = 'top',
+
+    -- How long (ms) each notification stays visible
+    NotificationDuration = 3000,
+
+    -- Which events trigger a notification
+    NotifyOn = {
+        XPGain = true,
+        XPLoss = true,
+        LevelUp = true,
+        LevelDown = true,
+        BoostGain = true,
+        BoostExpire = true,
+    },
+}
+```
+
+### Custom notifications
+
+Set `Notification = 'custom'` and open `client/notify.lua`. Fill in the `custom` block with your own logic:
+
+```lua
+if Settings.Notification == 'custom' then
+    -- data.title        string
+    -- data.description  string
+    -- data.type         'xpGain' | 'xpLoss' | 'levelUp' | 'levelDown' | 'boostGain' | 'boostExpire'
+    -- data.duration     number (ms)
+    -- data.icon         string (Lucide icon name)
+    -- data.amount       number (XP change)
+    -- data.previousXP   number
+    -- data.currentXP    number
+    -- data.neededXP     number
+    -- data.percent      number (boost XP modifier, only set for boostGain/boostExpire)
+end
+```
+
+## Locale
+
+```lua
+Settings = {
+    -- Supported: 'en', 'nl'. Affects all text in the skill system UI.
+    Locale = 'en',
+}
+```
+
+## Database and saving
+
+```lua
+Settings = {
+    -- Auto-create the required table on resource start.
+    -- Set false to run db.sql manually instead.
+    AutoSeedDatabase = true,
+
+    -- How often (ms) all online player skills are saved.
+    -- A save also happens on player disconnect and resource stop.
+    SaveInterval = 5 * 60 * 1000,
+
+    -- XP assigned to a skill when a player is first encountered.
+    -- In most cases this should stay 0.
+    DefaultSkillXP = 0,
+}
+```
+
+## Global decay
+
+Per-skill decay behaviour (mode, amount, interval, cap) is set on each skill — see [Defining Skills](/skillsystem/skills/). These two options control decay globally:
+
+```lua
+Settings = {
+    Decay = {
+        -- Master switch — false disables all decay regardless of per-skill settings
+        enabled = true,
+
+        -- How often (ms) the server checks and applies online decay.
+        -- Should always be smaller than the smallest decay interval on any skill.
+        TickRate = 60 * 1000,
+    },
+}
+```

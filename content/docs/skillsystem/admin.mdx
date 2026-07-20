@@ -1,0 +1,59 @@
+---
+title: Admin Access
+description: The in-game admin menu, permissions, and the /skilladmin command
+---
+
+skillSystem includes an in-game admin menu to view and modify any player's skills.
+
+## Enabling it
+
+```lua
+Settings = {
+    -- Enable the admin menu. Access is controlled by the /skilladmin command.
+    AdminMenu = true,
+}
+```
+
+## The `/skilladmin` command
+
+```
+/skilladmin [id]
+```
+
+| Param | Required | Description |
+|---|---|---|
+| `id` | No | Target player's server ID. Defaults to yourself if omitted |
+
+## Permissions
+
+Access is gated by `Bridge.HasPermission(source)`, checked **server-side only** — the client is never trusted to self-report admin status. A player is granted access if any of the following are true:
+
+1. They have the `skillsystem.admin` ace permission
+2. They have an ace permission/principal matching one of the keys in `Settings.AdminGroups` (e.g. `add_principal identifier.xxxx group.admin` in `server.cfg`)
+3. Their framework permission group is a key in `Settings.AdminGroups`:
+   - **ESX** — checked via `xPlayer.getGroup()`
+   - **Qbox** — checked via `exports.qbx_core:HasPermission(source, group)`
+
+```lua
+Settings = {
+    AdminGroups = {
+        admin = true,
+        god = true,
+        superadmin = true,
+    },
+}
+```
+
+Edit `AdminGroups` to match how your server assigns staff permissions — no code changes needed.
+
+<Callout type="warn" title="Debug bypasses permissions">
+  `Settings.Debug = true` bypasses the permission check entirely — everyone gets admin access. This is intended for local development only and **must** be `false` in production.
+</Callout>
+
+## Client-side caching
+
+The client caches a `Bridge.HasPermission()` flag once the server has actually granted access (i.e. once it receives the `openAdmin` payload), purely so the NUI can reject a cheat-menu poking its callbacks directly without a wasted round trip.
+
+<Callout type="info">
+  This is a UX optimization, not a security boundary — every admin action is independently re-validated server-side regardless of what the client reports. See [Security model](/skillsystem/exports/#security-model) for how this same pattern applies to every other client-facing export.
+</Callout>

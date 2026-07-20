@@ -1,0 +1,38 @@
+---
+title: Overview
+description: A flexible, framework-agnostic skill and progression system for FiveM
+---
+
+skillSystem is a flexible, framework-agnostic skill and progression system for FiveM. Built with performance in mind — a single server thread handles all decay, a single save tick handles all players, and all skill data is cached server-side with no per-player threads.
+
+## Features
+
+- Fully dynamic skill definitions — add new skills with zero code changes
+- XP-based progression with a configurable exponential curve per skill
+- Per-skill decay with four modes: online, offline, both, or none
+- Maximum decay cap per skill — skills decay to a floor, not to zero
+- Offline decay calculated on login based on time away
+- Framework auto-detection — supports Qbox and ESX out of the box
+- Clean NUI with a quick menu pill and a full side panel
+- Temporary XP boosts and debuffs from any script — cooldown-gated per boost, stackable, config presets or fully ad-hoc definitions
+- Internal, ox_lib, or custom notification support
+- In-game admin menu to view and modify any player's skills, with ace- and framework-group-based permission checks
+- Configurable keybind with tap (quick menu) and hold (full panel) behaviour
+- Debug logging toggle for development
+
+## Requirements
+
+<Cards>
+  <Card title="oxmysql" href="https://github.com/overextended/oxmysql" />
+  <Card title="ox_lib" href="https://github.com/overextended/ox_lib" />
+</Cards>
+
+Also requires a supported framework: **Qbox** (`qbx_core`) or **ESX** (`es_extended`).
+
+## Next steps
+
+<Cards>
+  <Card title="Installation" href="/skillsystem/installation/" description="Get skillSystem running on your server" />
+  <Card title="Configuration" href="/skillsystem/configuration/" description="General settings.lua options" />
+  <Card title="Defining Skills" href="/skillsystem/skills/" description="Add skills, categories, and decay" />
+</Cards>

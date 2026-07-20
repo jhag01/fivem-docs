@@ -1,0 +1,90 @@
+---
+title: Defining Skills
+description: Adding skills, categories, decay, and the XP curve
+---
+
+Skills are fully data-driven — add a new one to the `Skills` table in `settings.lua` and it appears in the database, UI, and notification system automatically, with no code changes.
+
+## Adding a skill
+
+```lua
+Settings = {
+    Skills = {
+        fishing = {
+            label = 'Fishing',
+            category = 'hobby',
+            maxLevel = 100,
+            baseXP = 130,
+            exponent = 1.6,
+            default = false,
+            icon = 'Fish',
+            decay = {
+                mode = 'none',
+            },
+        },
+    },
+}
+```
+
+The key (`fishing`) is the skill's internal identifier — lowercase, no spaces. It's what you pass to exports like `GiveXP` and `HasLevel`.
+
+| Field | Type | Description |
+|---|---|---|
+| `label` | string | Display name shown in the UI |
+| `category` | string | Must match a key in `Categories` |
+| `maxLevel` | number | Maximum level a player can reach |
+| `baseXP` | number | Base XP cost per level — higher means slower early progression |
+| `exponent` | number | Curve steepness — higher means more grind at higher levels |
+| `default` | boolean | If `true`, always visible in the UI even with no progress. If `false`, only shows once the player has earned at least 1 XP |
+| `icon` | string | A [Lucide](https://lucide.dev) icon name |
+| `decay` | table | Decay configuration — see below |
+
+## Categories
+
+Categories group skills together in the full panel UI. The `category` key on each skill must match a key here:
+
+```lua
+Settings = {
+    Categories = {
+        physical = { label = 'Physical' },
+        hobby    = { label = 'Hobby' },
+        illegal  = { label = 'Illegal' },
+        job      = { label = 'Job' },
+    },
+}
+```
+
+## Decay modes
+
+| Mode | Behaviour |
+|---|---|
+| `both` | Decays while online and offline |
+| `online` | Only decays while the player is connected |
+| `offline` | Only decays while the player is away (calculated on login, based on time away) |
+| `none` | This skill never decays |
+
+For any mode other than `none`, set the rate and cap:
+
+```lua
+decay = {
+    mode = 'both',
+    amount = 10,             -- XP removed per tick
+    interval = 60 * 60 * 1000, -- time between ticks, in ms (here: 1 hour)
+    maxAmount = 500,          -- total XP this skill can ever lose to decay — 0 for no cap
+},
+```
+
+`maxAmount` means skills decay to a floor, not to zero — a skill never loses more than this much total XP to decay, no matter how long a player is away or stays idle.
+
+Decay also has two global settings in `settings.lua` (a master on/off switch and the server's tick rate) — see [Configuration](/skillsystem/configuration/#global-decay).
+
+## XP curve
+
+Each skill's curve is controlled by `baseXP` and `exponent`:
+
+```
+XP required to reach level N = baseXP * (N ^ exponent)
+```
+
+- Higher `baseXP` → slower early progression
+- Higher `exponent` → steeper curve, more grind at higher levels

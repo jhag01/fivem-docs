@@ -1,0 +1,4 @@
+{
+  "title": "skillSystem",
+  "pages": ["index", "installation", "configuration", "skills", "boosts", "admin", "exports", "events"]
+}
