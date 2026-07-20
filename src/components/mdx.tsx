@@ -1,5 +1,6 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { ResourceLinks } from './resource-links';
 import type { MDXComponents } from 'mdx/types';
 
 export function getMDXComponents(components?: MDXComponents) {
@@ -7,6 +8,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ...defaultMdxComponents,
     Step,
     Steps,
+    ResourceLinks,
     ...components,
   } satisfies MDXComponents;
 }
