@@ -1,0 +1,56 @@
+---
+title: Installation
+description: Installing dots-txlogin, including the required txAdmin menu edit
+---
+
+Setting up dots-txlogin requires a one-time modification to your txAdmin resources so the menu respects "Duty" status.
+
+<Steps>
+<Step>
+
+### Resource setup
+
+Place the `dots-txlogin` folder into your server's `resources/` directory, then add it to `server.cfg`:
+
+```
+ensure dots-txlogin
+```
+
+</Step>
+<Step>
+
+### Permissions
+
+If you want to restrict the toggle command to authorized staff, enable `Settings.AcePerms` in `settings.lua` (see [Configuration](/dots-txlogin/configuration/)), then grant the ace permission — the permission name always matches whatever `Settings.Command` is set to (default `txLogin`):
+
+```
+add_ace group.admin "command.txLogin" allow
+```
+
+</Step>
+<Step>
+
+### The txAdmin menu lock (required)
+
+To stop staff from using admin tools while off duty, you need to edit txAdmin's own client-side logic.
+
+In `monitor/resource/menu/client/cl_base.lua`, find the `txcl:setAdmin` event handler and change:
+
+```lua
+menuIsAccessible = true
+```
+
+to:
+
+```lua
+menuIsAccessible = LocalPlayer.state.txLogin
+```
+
+This is the main use case for the `txcl:reAuth` re-auth trigger: toggling duty forces a re-auth, so the state bag updates immediately and the menu's accessibility follows it without a reconnect.
+
+</Step>
+</Steps>
+
+## Next steps
+
+Head to [Configuration](/dots-txlogin/configuration/) to set up `settings.lua`, or [Integration](/dots-txlogin/integration/) to react to duty changes from another resource.

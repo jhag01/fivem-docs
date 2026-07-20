@@ -1,0 +1,64 @@
+---
+title: Integration
+description: State bags and reactive handlers for other resources
+---
+
+dots-txlogin acts as a bridge, exposing data through state bags and exports so other resources (HUDs, scoreboards, loggers) can react to staff status.
+
+## State bags
+
+State bags are synchronized across the network — you can read these client or server-side.
+
+| State Bag | Type | Description |
+|---|---|---|
+| `playerState.txAdmin` | boolean | `true` if the player is a verified txAdmin administrator |
+| `playerState.txLogin` | boolean | `true` if the administrator is currently on duty |
+
+```lua
+-- client-side check
+if LocalPlayer.state.txLogin then
+    print('Staff mode active: enabling ESP...')
+end
+```
+
+## Reactive state bag handlers
+
+State bags are reactive — instead of polling in a loop to check if a player is on duty, tell your script to "wake up" only when the value actually changes.
+
+### Client-side
+
+Use this to toggle UI elements, ESP, or local permissions.
+
+```lua
+AddStateBagChangeHandler('txLogin', nil, function(bagName, key, value, _unused, replicated)
+    local playerId = GetPlayerFromStateBagName(bagName)
+    if not playerId or playerId == 0 then return end
+
+    local serverId = GetPlayerServerId(playerId)
+
+    if value then
+        print(string.format('Player %s is now on duty!', serverId))
+    else
+        print(string.format('Player %s is now off duty.', serverId))
+    end
+end)
+```
+
+### Server-side
+
+Use this for logging, changing routing buckets, or syncing with a database.
+
+```lua
+AddStateBagChangeHandler('txLogin', nil, function(bagName, key, value, _unused, replicated)
+    local playerId = GetPlayerFromStateBagName(bagName)
+    if not playerId or playerId == 0 then return end
+
+    if value then
+        print(string.format('Admin %s has clocked in.', GetPlayerName(playerId)))
+    else
+        print(string.format('Admin %s has clocked out.', GetPlayerName(playerId)))
+    end
+end)
+```
+
+See [Exports](/dots-txlogin/exports/) for the full server export API.

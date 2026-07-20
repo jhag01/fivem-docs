@@ -1,0 +1,77 @@
+---
+title: Configuration
+description: Walking through settings.lua
+---
+
+All configuration lives in `settings.lua`.
+
+## Command and permissions
+
+```lua
+Settings = {
+    Command = 'txLogin', -- Command to toggle duty status
+    AcePerms = false,     -- Use ace permissions: command.txLogin
+}
+```
+
+With `AcePerms` enabled, the toggle command is gated behind an ace permission named `command.<Command>` — see [Installation](/dots-txlogin/installation/#permissions) for granting it.
+
+## Locale
+
+```lua
+Settings = {
+    Locale = 'en', -- Language for player-facing messages: 'en', 'nl', 'fr', 'es', 'de'
+}
+```
+
+Player-facing notifications (currently just the duty on/off message) are pulled from `locales/<code>.lua`. Adding a language is just a new `locales/xx.lua` file following the same shape as the existing ones — no manifest changes needed since `locales/*.lua` is already globbed in.
+
+## Duty tracking and cooldown
+
+```lua
+Settings = {
+    DutyTracking = true, -- Track time on duty per admin (getDutyTime export, session length in logs, duty_state.json for surviving script restarts)
+    Cooldown = 0,         -- Seconds an admin must wait between duty toggles; 0 to disable
+}
+```
+
+Both are optional modules — see [Modules](/dots-txlogin/modules/) for how each one behaves.
+
+## Notifications and logging
+
+```lua
+Settings = {
+    Notify = 'none', -- Notification type: 'none', 'ox' (ox_lib required), 'custom' (implement in utils.Notify)
+    Logger = 'none',  -- Logger type: 'none', 'ox' (ox_lib required), 'discord', 'custom' (implement in utils.Log)
+}
+```
+
+`ox` requires `@ox_lib/init.lua` — uncomment it in `fxmanifest.lua` if you use `'ox'` for either option.
+
+### Discord logging
+
+Used when `Logger = 'discord'`:
+
+```lua
+Settings = {
+    DiscordLogs = {
+        Webhook = 'WEBHOOK',
+        Username = 'txLogin',
+        Color = '16711680',
+        Title = 'txLogin:Logger',
+        Footer = 'githubUser: jhag01',
+    },
+}
+```
+
+### ox_lib logging
+
+Used when `Logger = 'ox'`:
+
+```lua
+Settings = {
+    OxLogs = {
+        Event = 'txLogin', -- ox_lib log event name
+    },
+}
+```

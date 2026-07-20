@@ -1,0 +1,29 @@
+---
+title: Modules
+description: Duty tracking and cooldown, and how they're built
+---
+
+Optional features are just files in `server/` that check their own `Settings` flag and no-op when it's off — no separate `modules/` folder. Neither module can use a plain top-of-file `if not Settings.X then return end` bailout like a fully self-contained file could, since `server/main.lua` calls their functions inline and expects them to exist either way — so the check happens inside each function instead.
+
+## Duty tracking (`server/duty_tracking.lua`)
+
+Enabled via `Settings.DutyTracking` (default `true`). Every admin record carries:
+
+- `dutySince` — timestamp of when their current duty session started, or `nil` if off duty
+- `totalDuty` — accumulated seconds on duty since they connected
+
+Session length is included in Discord/ox logs when going off duty.
+
+<Callout type="info">
+  This is per-connection, not a permanent stats database — `totalDuty` resets when the admin fully disconnects.
+</Callout>
+
+It's also the only thing that needs `duty_state.json` (written at the resource root, gitignored): that file exists purely to carry `dutySince`/`totalDuty` across a script restart — see [Surviving a Restart](/dots-txlogin/restarts/). When `DutyTracking` is disabled, no file is ever created.
+
+## Cooldown (`server/cooldown.lua`)
+
+Enabled via `Settings.Cooldown` (default `0`, disabled), set to the number of seconds an admin must wait between duty toggles.
+
+When a toggle is blocked, the admin gets the `duty_cooldown` locale message (with the remaining seconds) instead of the duty being changed — [`toggleDuty`](/dots-txlogin/exports/#toggleduty) returns their current, unchanged status in that case.
+
+Purely in-memory, per-connection — no file, no persistence, resets on disconnect. There's nothing here for a script restart to lose.

@@ -1,0 +1,47 @@
+---
+title: Overview
+description: A standalone bridge between txAdmin authentication and a togglable Duty status
+---
+
+dots-txlogin is a standalone FiveM resource that bridges txAdmin authentication with a togglable "Duty" status. Staff can toggle their admin presence on/off, which is exposed to other resources via state bags — useful for incognito modes, staff tracking, or gating the txAdmin menu behind duty status.
+
+## Features
+
+- Listens to txAdmin authentication events to track connected staff
+- Syncs `txAdmin` and `txLogin` state bags on every player, readable from any other resource (scoreboards, HUDs, nametags, etc.)
+- Triggers a client-side re-auth (`txcl:reAuth`) on toggle so the txAdmin menu picks up the change immediately
+- Optional ACE permission support for the toggle command
+- Tracks time spent on duty per admin, per connection
+- Optional per-admin cooldown between duty toggles
+- Cleans up state on disconnect and on permission changes pushed from the txAdmin web panel
+- Survives a `restart dots-txlogin` without losing admin/duty state for players who stayed connected
+- Player-facing messages available in English, Dutch, French, Spanish, and German
+
+## Project structure
+
+```
+dots-txlogin/
+├── fxmanifest.lua
+├── settings.lua        -- all configuration lives here
+├── locales/             -- one file per language, keyed by Settings.Locale
+│   ├── en.lua
+│   ├── nl.lua
+│   ├── fr.lua
+│   ├── es.lua
+│   └── de.lua
+└── server/
+    ├── utils.lua         -- Notify/Log providers, Locale/FormatDuration helpers
+    ├── duty_tracking.lua -- optional, see Modules
+    ├── cooldown.lua       -- optional, see Modules
+    └── main.lua           -- core: admin tracking, toggleDuty, exports, event handlers
+```
+
+Everything is server-only (`server_only 'yes'`) — there's no `client/` folder.
+
+## Next steps
+
+<Cards>
+  <Card title="Installation" href="/dots-txlogin/installation/" description="Get dots-txlogin running, including the required txAdmin menu edit" />
+  <Card title="Configuration" href="/dots-txlogin/configuration/" description="Walk through settings.lua" />
+  <Card title="Integration" href="/dots-txlogin/integration/" description="State bags and reactive handlers for other resources" />
+</Cards>
