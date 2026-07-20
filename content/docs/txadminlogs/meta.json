@@ -1,0 +1,4 @@
+{
+  "title": "txAdminLogs",
+  "pages": ["index", "installation", "configuration", "events"]
+}

@@ -1,0 +1,41 @@
+---
+title: Installation
+description: Installing txAdminLogs
+---
+
+## Requirements
+
+- **Standalone** — no framework requirements (ESX, QBCore, or ox are not needed)
+- **txAdmin** — must be active on your server (bundled with FXServer by default)
+
+## Installation
+
+<Steps>
+<Step>
+
+### Download
+
+Drop the `txAdminLogs` folder into your server's `resources/` directory.
+
+</Step>
+<Step>
+
+### Configure webhooks
+
+Open `settings.lua` and replace the `'WEBHOOK'` placeholders with your actual Discord webhook URLs — at minimum, set `Settings.MasterWebhook.URL`. See [Configuration](/txadminlogs/configuration/) for how routing works.
+
+</Step>
+<Step>
+
+### Add it to `server.cfg`
+
+```
+ensure txAdminLogs
+```
+
+</Step>
+</Steps>
+
+## Next steps
+
+Head to [Configuration](/txadminlogs/configuration/) to set up webhook routing, or [Events](/txadminlogs/events/) to see everything that gets logged.

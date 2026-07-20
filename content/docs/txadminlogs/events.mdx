@@ -1,0 +1,71 @@
+---
+title: Events
+description: Every loggable event, how they're triggered, and how to toggle them
+---
+
+There are three independent event tables in `settings.lua` — `Settings.Events`, `Settings.menuEvents`, and `Settings.DeathLog` (covered on [Configuration](/txadminlogs/configuration/#death-log)). Add `enabled = false` to any entry to silence it without deleting the row:
+
+```lua
+['consoleCommand'] = { enabled = false, color = 0, title = '...', webhook = 'WEBHOOK' },
+```
+
+## System events (`Settings.Events`)
+
+On start, txAdminLogs automatically registers a `txAdmin:events:<key>` listener for every key below (skipping any with `enabled = false`) — this is the "zero maintenance" part: there's nothing to wire up when txAdmin adds new event types you want to log, you only add a row here.
+
+| Key | Description |
+|---|---|
+| `announcement` | Server-wide announcement |
+| `serverShuttingDown` | Server shutting down |
+| `scheduledRestart` | Scheduled restart triggered |
+| `scheduledRestartSkipped` | Scheduled restart skipped |
+| `playerBanned` | Player banned |
+| `playerDirectMessage` | Direct message sent to a player |
+| `playerHealed` | Player healed |
+| `playerKicked` | Player kicked |
+| `playerWarned` | Player warned |
+| `whitelistPlayer` | Player whitelisted |
+| `whitelistPreApproval` | Whitelist pre-approval |
+| `whitelistRequest` | Whitelist request submitted |
+| `actionRevoked` | A previous action (ban/warn/etc.) revoked |
+| `adminAuth` | Admin authenticated |
+| `adminsUpdated` | Admin list updated |
+| `configChanged` | txAdmin config changed |
+| `consoleCommand` | Console command run |
+
+Each entry sets its own `color`, `title`, and `webhook` — see [Master Webhook and Dual-Routing](/txadminlogs/configuration/#master-webhook-and-dual-routing) for how `webhook` resolves.
+
+## Admin menu actions (`Settings.menuEvents`)
+
+Unlike system events, these all come through a single handler (`txsv:logger:menuEvent`) that looks up the fired `action` in this table — so adding a new key here only takes effect for actions the script already knows how to describe.
+
+| Key | Description |
+|---|---|
+| `playerModeChanged` | Player mode changed (god mode, no-clip, etc.) |
+| `teleportWaypoint` | Teleported to waypoint |
+| `teleportCoords` | Teleported to specific coordinates |
+| `spawnVehicle` | Spawned a vehicle |
+| `deleteVehicle` | Deleted a vehicle |
+| `vehicleRepair` | Repaired a vehicle |
+| `vehicleBoost` | Boosted a vehicle |
+| `announcement` | Server announcement made from the menu |
+| `clearArea` | Cleared an area |
+| `spectatePlayer` | Started spectating a player |
+| `freezePlayer` | Toggled freeze on a player |
+| `teleportPlayer` | Teleported to a player |
+| `summonPlayer` | Summoned a player |
+| `drunkEffect` | Triggered drunk effect on a player |
+| `setOnFire` | Set a player on fire |
+| `wildAttack` | Triggered a wild animal attack on a player |
+| `showPlayerIDs` | Toggled show player IDs |
+
+<Callout type="info">
+  Menu heals aren't in this table on purpose — txAdmin already fires `playerHealed` under `Settings.Events` for every heal, whether it came from the menu or the web panel. Logging it again here would just duplicate the same entry.
+</Callout>
+
+## Smart formatting
+
+A couple of things happen automatically to keep embeds readable, regardless of which event fired:
+
+- **Data flattening** — table values (like player identifiers) are turned into bulleted sub-lists instead of raw JSON; camelCase/snake_case keys are turned into "Title Case" field names.
+- **Dynamic timestamps** — a field named `expiration` (case-insensitive) gets special treatment: a Unix timestamp renders as both an absolute and relative Discord timestamp (`<t:...:f> (<t:...:R>)`, e.g. "Expires in 2 hours", which updates live in Discord's UI), while `false`/`0` renders as "Permanent".

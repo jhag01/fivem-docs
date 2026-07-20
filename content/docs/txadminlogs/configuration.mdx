@@ -1,0 +1,65 @@
+---
+title: Configuration
+description: Bot appearance, webhook routing, and how dual-routing works
+---
+
+All configuration lives in `settings.lua`.
+
+## Bot appearance
+
+```lua
+Settings.Bot = {
+    Username = 'txAdmin Logs',
+    AvatarURL = nil, -- leave nil unless you have a valid image URL; Discord rejects an empty string
+    FooterText = 'txAdmin Logs • ' .. os.date('%Y'),
+    FooterIcon = nil, -- same as above
+    IncludeTimestamp = true,
+}
+```
+
+<Callout type="warn">
+  Leave `AvatarURL`/`FooterIcon` as `nil` rather than an empty string — Discord rejects the whole embed if they're set to `''`.
+</Callout>
+
+## Master webhook and dual-routing
+
+```lua
+Settings.MasterWebhook = {
+    Enabled = true,
+    URL = 'WEBHOOK',
+}
+```
+
+Every loggable event (see [Events](/txadminlogs/events/)) has its own `webhook` field. This is a **dual-routing** system:
+
+- If the event's own `webhook` is set to a real URL, the log is sent there.
+- If it's left as the `'WEBHOOK'` placeholder, it falls back to `Settings.MasterWebhook.URL` instead.
+- **Either way**, if `Settings.MasterWebhook` is enabled and configured, the log is *also* sent to the Master webhook (unless the event already used the Master webhook via the fallback above, in which case it's only sent once) — so the Master channel always ends up with a full history, while category webhooks let you split specific events into their own channels.
+
+<Callout type="info" title="Nothing configured?">
+  If both an event's own `webhook` and `Settings.MasterWebhook.URL` are left as the `'WEBHOOK'` placeholder, that event is silently skipped — no error, just no Discord message.
+</Callout>
+
+<Callout type="info" title="Privacy tip">
+  Keep Moderation and Admin webhooks in private staff-only channels, and route Server Announcements to a public-facing community channel.
+</Callout>
+
+## Delivery behavior
+
+Logs are queued and sent one at a time in the background:
+
+- On a Discord rate-limit response (`429`), it waits out the `Retry-After` duration and retries.
+- On any other non-success response, that log is dropped rather than retried indefinitely — delivery is best-effort, not guaranteed.
+
+## Death log
+
+```lua
+Settings.DeathLog = {
+    enabled = true,
+    color = 2895667,
+    title = '💀 Player Death',
+    webhook = 'WEBHOOK',
+}
+```
+
+Fires for every in-game death, off txAdmin's own built-in death detector — logs the victim, the killer (or "N/A" for suicide/NPC deaths), and the cause. Set `enabled = false` to turn it off entirely.

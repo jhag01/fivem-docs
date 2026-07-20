@@ -1,0 +1,46 @@
+---
+title: Overview
+description: A lightweight, standalone logging system that routes txAdmin events to Discord
+---
+
+txAdminLogs is a lightweight, standalone logging system for FiveM that automatically captures and routes txAdmin events to Discord. It bridges the gap between server-side administration and community transparency by providing real-time audit trails.
+
+## Features
+
+- **Zero maintenance** — automatically registers a listener for every event defined in your settings
+- **Dual-routing** — sends logs to category-specific channels (Bans, Whitelist, ...) while simultaneously maintaining a Master Log of everything
+- **Smart tables** — flattens complex data, such as player identifiers, into clean, bulleted lists
+- **Dynamic timestamps** — converts Unix expiration codes into human-readable, localized Discord timestamps
+- **Menu logging** — tracks in-game menu actions like teleports, heals, and troll effects
+- **Per-event toggles** — silence any individual log line with `enabled = false` instead of deleting config rows
+- **Standalone** — no framework requirements (ESX/QBCore not required), works on any server
+
+## Supported logs
+
+### System events
+
+Triggered by the txAdmin panel or automated server tasks:
+
+- **Server**: announcements, shutdowns, scheduled restarts
+- **Moderation**: bans, kicks, warnings, heals, direct messages
+- **Whitelist**: player approvals and request tracking
+- **Admin**: authentication logs, config changes, and console commands
+- **Deaths**: victim, killer (if any), and cause for every in-game death
+
+### Admin menu actions
+
+Logs actions performed by staff via the in-game txAdmin menu:
+
+- **Self-actions**: player mode changes, spawning/repairing vehicles, clearing areas
+- **Interactions**: spectating, freezing, or summoning specific players
+- **Troll options**: drunk effects, setting players on fire, or wild animal attacks
+
+See [Events](/txadminlogs/events/) for the full list of configurable event keys.
+
+## Next steps
+
+<Cards>
+  <Card title="Installation" href="/txadminlogs/installation/" description="Get txAdminLogs running" />
+  <Card title="Configuration" href="/txadminlogs/configuration/" description="Bot appearance, webhooks, and dual-routing" />
+  <Card title="Events" href="/txadminlogs/events/" description="Every loggable event, and how to toggle them" />
+</Cards>
