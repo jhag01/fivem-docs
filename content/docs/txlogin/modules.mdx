@@ -18,12 +18,12 @@ Session length is included in Discord/ox logs when going off duty.
   This is per-connection, not a permanent stats database — `totalDuty` resets when the admin fully disconnects.
 </Callout>
 
-It's also the only thing that needs `duty_state.json` (written at the resource root, gitignored): that file exists purely to carry `dutySince`/`totalDuty` across a script restart — see [Surviving a Restart](/dots-txlogin/restarts/). When `DutyTracking` is disabled, no file is ever created.
+It's also the only thing that needs `duty_state.json` (written at the resource root, gitignored): that file exists purely to carry `dutySince`/`totalDuty` across a script restart — see [Surviving a Restart](/txlogin/restarts/). When `DutyTracking` is disabled, no file is ever created.
 
 ## Cooldown (`server/cooldown.lua`)
 
 Enabled via `Settings.Cooldown` (default `0`, disabled), set to the number of seconds an admin must wait between duty toggles.
 
-When a toggle is blocked, the admin gets the `duty_cooldown` locale message (with the remaining seconds) instead of the duty being changed — [`toggleDuty`](/dots-txlogin/exports/#toggleduty) returns their current, unchanged status in that case.
+When a toggle is blocked, the admin gets the `duty_cooldown` locale message (with the remaining seconds) instead of the duty being changed — [`toggleDuty`](/txlogin/exports/#toggleduty) returns their current, unchanged status in that case.
 
 Purely in-memory, per-connection — no file, no persistence, resets on disconnect. There's nothing here for a script restart to lose.

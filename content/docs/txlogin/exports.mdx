@@ -16,14 +16,14 @@ Toggles a player's duty status, or forces a specific state. Returns the new stat
 
 ```lua
 -- toggle
-exports['dots-txlogin']:toggleDuty(source)
+exports['txLogin']:toggleDuty(source)
 
 -- force a player on duty
-local newState = exports['dots-txlogin']:toggleDuty(source, true)
+local newState = exports['txLogin']:toggleDuty(source, true)
 ```
 
 <Callout type="info">
-  If a [cooldown](/dots-txlogin/modules/#cooldown-servercooldownlua) is configured, it applies to every call to this function, including calls made through this export — there's no separate "forced" bypass path.
+  If a [cooldown](/txlogin/modules/#cooldown-servercooldownlua) is configured, it applies to every call to this function, including calls made through this export — there's no separate "forced" bypass path.
 </Callout>
 
 ## `fetchAdmins`
@@ -35,7 +35,7 @@ Returns a table of authenticated admins currently on the server, keyed by server
 | `onlyOnDuty` | boolean | No | If `true`, only returns admins currently on duty |
 
 ```lua
-local activeStaff = exports['dots-txlogin']:fetchAdmins(true)
+local activeStaff = exports['txLogin']:fetchAdmins(true)
 
 for src, info in pairs(activeStaff) do
     print(info.username .. ' (ID: ' .. src .. ') is active!')
@@ -51,7 +51,7 @@ Returns the total number of seconds an admin has spent on duty since they connec
 | `source` | number | Yes | Server ID (netid) of the player |
 
 ```lua
-local seconds = exports['dots-txlogin']:getDutyTime(source)
+local seconds = exports['txLogin']:getDutyTime(source)
 ```
 
-Requires [`Settings.DutyTracking`](/dots-txlogin/configuration/#duty-tracking-and-cooldown) to be enabled (it is by default).
+Requires [`Settings.DutyTracking`](/txlogin/configuration/#duty-tracking-and-cooldown) to be enabled (it is by default).

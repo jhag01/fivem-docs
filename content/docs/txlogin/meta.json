@@ -1,4 +1,4 @@
 {
-  "title": "dots-txlogin",
+  "title": "txLogin",
   "pages": ["index", "installation", "configuration", "modules", "integration", "exports", "restarts"]
 }

@@ -3,7 +3,7 @@ title: Integration
 description: State bags and reactive handlers for other resources
 ---
 
-dots-txlogin acts as a bridge, exposing data through state bags and exports so other resources (HUDs, scoreboards, loggers) can react to staff status.
+txLogin acts as a bridge, exposing data through state bags and exports so other resources (HUDs, scoreboards, loggers) can react to staff status.
 
 ## State bags
 
@@ -61,4 +61,4 @@ AddStateBagChangeHandler('txLogin', nil, function(bagName, key, value, _unused, 
 end)
 ```
 
-See [Exports](/dots-txlogin/exports/) for the full server export API.
+See [Exports](/txlogin/exports/) for the full server export API.

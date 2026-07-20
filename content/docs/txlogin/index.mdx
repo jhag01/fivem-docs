@@ -3,7 +3,7 @@ title: Overview
 description: A standalone bridge between txAdmin authentication and a togglable Duty status
 ---
 
-dots-txlogin is a standalone FiveM resource that bridges txAdmin authentication with a togglable "Duty" status. Staff can toggle their admin presence on/off, which is exposed to other resources via state bags — useful for incognito modes, staff tracking, or gating the txAdmin menu behind duty status.
+txLogin is a standalone FiveM resource that bridges txAdmin authentication with a togglable "Duty" status. Staff can toggle their admin presence on/off, which is exposed to other resources via state bags — useful for incognito modes, staff tracking, or gating the txAdmin menu behind duty status.
 
 ## Features
 
@@ -14,13 +14,13 @@ dots-txlogin is a standalone FiveM resource that bridges txAdmin authentication 
 - Tracks time spent on duty per admin, per connection
 - Optional per-admin cooldown between duty toggles
 - Cleans up state on disconnect and on permission changes pushed from the txAdmin web panel
-- Survives a `restart dots-txlogin` without losing admin/duty state for players who stayed connected
+- Survives a `restart txLogin` without losing admin/duty state for players who stayed connected
 - Player-facing messages available in English, Dutch, French, Spanish, and German
 
 ## Project structure
 
 ```
-dots-txlogin/
+txLogin/
 ├── fxmanifest.lua
 ├── settings.lua        -- all configuration lives here
 ├── locales/             -- one file per language, keyed by Settings.Locale
@@ -41,7 +41,7 @@ Everything is server-only (`server_only 'yes'`) — there's no `client/` folder.
 ## Next steps
 
 <Cards>
-  <Card title="Installation" href="/dots-txlogin/installation/" description="Get dots-txlogin running, including the required txAdmin menu edit" />
-  <Card title="Configuration" href="/dots-txlogin/configuration/" description="Walk through settings.lua" />
-  <Card title="Integration" href="/dots-txlogin/integration/" description="State bags and reactive handlers for other resources" />
+  <Card title="Installation" href="/txlogin/installation/" description="Get txLogin running, including the required txAdmin menu edit" />
+  <Card title="Configuration" href="/txlogin/configuration/" description="Walk through settings.lua" />
+  <Card title="Integration" href="/txlogin/integration/" description="State bags and reactive handlers for other resources" />
 </Cards>
