@@ -83,6 +83,10 @@ Different boosts don't share a cooldown — several can be active and stacking o
 
 `server/ox_inventory.lua` ships a ready-made bridge — no wrapper export of your own needed. Point an item's `server.export` at it and give the item a `boost` field:
 
+<Callout type="warn" title="ox_inventory must start before skillSystem">
+  The bridge checks `GetResourceState('ox_inventory') ~= 'started'` once, when skillSystem's server scripts load, and only registers the `useBoostItem` export if ox_inventory is already running at that point. If skillSystem starts first, the export never registers for that server session — no error, no log — and item-based boosts will silently do nothing until skillSystem is restarted after ox_inventory is up. Make sure `ensure ox_inventory` comes before `ensure skillSystem` in `server.cfg`.
+</Callout>
+
 ```lua
 -- ox_inventory/data/items.lua
 
