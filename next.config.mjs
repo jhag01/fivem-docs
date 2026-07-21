@@ -24,6 +24,12 @@ const config = {
   turbopack: {
     root: dirname,
   },
+  env: {
+    // The static search client hits an absolute '/api/search' path by
+    // default, which 404s once basePath is non-empty — expose it here so
+    // the client component can prefix the request correctly.
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
 };
 
 export default withMDX(config);
