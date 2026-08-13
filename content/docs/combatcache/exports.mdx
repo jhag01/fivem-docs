@@ -1,0 +1,37 @@
+---
+title: Exports
+description: The server export API, with an example and the security model
+---
+
+Use this export from any other resource to log a hit that didn't come from a normal player-vs-player gunfight — a taser, a scripted damage source, anything that isn't the game's own `CEventNetworkEntityDamage` event.
+
+## Server-side
+
+```lua
+-- Report a hit on targetServerId.
+-- weaponName and boneLabelOverride are display text - whatever you pass shows
+-- up as-is in the log (type/length validated, not otherwise interpreted).
+-- damageOverride is accepted for call-signature compatibility but not used -
+-- see below for why.
+exports['combatCache']:AddCombatEntry(targetServerId, weaponName, damageOverride, boneLabelOverride)
+```
+
+The attacker is always whichever resource/player's client calls this — there's no `attackerOverride` parameter, so it's always self-attributed to the caller.
+
+## Example
+
+```lua
+-- server-side, from wherever your taser item's use logic actually runs
+RegisterNetEvent('mytaser:server:use', function(targetServerId)
+    -- ...apply the taser effect...
+    exports['combatCache']:AddCombatEntry(targetServerId, 'Taser', nil, 'Scripted')
+end)
+```
+
+## Why `damageOverride` doesn't do anything
+
+combatCache doesn't trust a claimed damage number from *any* source, including its own export — the server always computes `healthLost` from its own tracked health snapshot, the same as it does for a normal reported gunfight hit (see [Configuration](/combatcache/configuration/#hit-reporting-and-corroboration)). A hit logged through this export only shows real damage numbers if your script's action actually changes the target's health; otherwise it's logged with `healthLost = 0`, which is an accurate reflection of what the server could actually verify happened.
+
+<Callout type="error" title="Never trust the client">
+  This export is called from your own server-side logic, so there's nothing to validate on the caller's identity beyond the existing `invoker` visibility check (see [Resource trust](/combatcache/configuration/#resource-trust)). But the same principle applies throughout this resource: nothing about *who got hit, how hard, or whether it happened at all* is ever taken on a client's word alone. Every hit — whether it came from this export or a real gunfight — goes through the same server-side health verification before it's logged.
+</Callout>

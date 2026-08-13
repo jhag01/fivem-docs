@@ -1,0 +1,70 @@
+---
+title: Access & Commands
+description: The /combatcache command, view modes, and staff/emergency-job permissions
+---
+
+## The `/combatcache` command
+
+```
+/combatcache [id]
+```
+
+| Param | Required | Description |
+|---|---|---|
+| `id` | No | Target player's server ID. Defaults to yourself if omitted |
+
+What you actually get back depends entirely on who *you* are — not on what you ask for. The server decides your mode and pre-filters the entries before they're ever sent to your client:
+
+| Mode | Who gets it | What it shows |
+|---|---|---|
+| `default` | Anyone, viewing their own log | Basic columns, and only hits older than `minViewAge` (see [Configuration](/combatcache/configuration/#view-delay)) |
+| `full` | Staff, viewing anyone's log (including their own) | Every column, no view delay |
+| `emergency` | An on-duty emergency job, viewing someone *else's* log | Emergency-relevant columns, hits up to `emergencyMaxViewAge` old |
+
+Requesting someone else's log without permission doesn't error — it just quietly shows you your own instead.
+
+## The emergency in-character option
+
+If [`Settings.EmergencyTarget.enabled`](/combatcache/configuration/#emergency-ox_target-option) is true and `ox_target` is running, on-duty `EmergencyJobs` get a "Check injuries" option on other players that pulls up the same `emergency`-mode log after a short animation — no command needed.
+
+## Permissions
+
+Access to another player's log is granted if either of these is true, checked **server-side only** — the client is never trusted to self-report either one:
+
+**Staff** — any of:
+1. The `combatcache.staff` ace permission
+2. An ace permission/principal matching a key in `Settings.StaffGroups` (e.g. `add_principal identifier.xxxx group.admin` in `server.cfg`)
+3. Their framework permission group is a key in `Settings.StaffGroups`:
+   - **ESX** — checked via `xPlayer.getGroup()`
+   - **Qbox** — checked via `exports.qbx_core:HasPermission(source, group)`
+
+**On-duty emergency job** — their framework job is a key in `Settings.EmergencyJobs` *and* they're on duty:
+   - **ESX** — `xPlayer.getJob().name` + `job.onDuty`
+   - **Qbox** — `PlayerData.job.name` + `job.onduty`
+
+```lua
+Settings = {
+    StaffGroups = {
+        admin = true,
+        god = true,
+        superadmin = true,
+    },
+
+    EmergencyJobs = {
+        ['police'] = true,
+        ['ambulance'] = true,
+    },
+}
+```
+
+Edit both to match how your server assigns groups and job names — no code changes needed.
+
+<Callout type="info">
+  This is the same framework-agnostic pattern used across all these resources — see `bridge/esx.lua` and `bridge/qbox.lua` for the actual implementation. Only ESX and Qbox ship today; adding another framework means adding one more bridge file, nothing else in the resource touches framework internals directly.
+</Callout>
+
+## Why this can't be spoofed client-side
+
+Every check above runs server-side, in the same callback that returns the data — there is no client-computed "am I staff" flag anywhere in this resource. A modified client asking for someone else's log, or claiming a mode it isn't entitled to, gets exactly what the server decides to send it: nothing more.
+
+This is also why the view-delay (`minViewAge`) can't be bypassed by a modified client either — the filtering happens before the entries are sent, not after.

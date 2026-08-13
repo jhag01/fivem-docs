@@ -1,4 +1,4 @@
 {
   "title": "Docs",
-  "pages": ["index", "skillsystem", "txlogin", "txadminlogs", "happyhour"]
+  "pages": ["index", "combatcache", "skillsystem", "txlogin", "txadminlogs", "happyhour"]
 }

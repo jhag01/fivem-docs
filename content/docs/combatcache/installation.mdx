@@ -1,0 +1,45 @@
+---
+title: Installation
+description: Installing combatCache
+---
+
+## Requirements
+
+Make sure these are installed and running before you start:
+
+- [ox_lib](https://github.com/overextended/ox_lib)
+- Qbox (`qbx_core`) or ESX (`es_extended`)
+
+Optional: [ox_inventory](https://github.com/overextended/ox_inventory) and [ox_target](https://github.com/overextended/ox_target) — see [Overview](/combatcache/) for what each adds.
+
+## Installation
+
+<Steps>
+<Step>
+
+### Download
+
+[Download the latest release](https://github.com/jhag01/combatCache/releases/latest) and place it in your server's `resources/` folder.
+
+</Step>
+<Step>
+
+### Add it to `server.cfg`
+
+```
+ensure combatCache
+```
+
+Make sure your framework resource (`qbx_core` or `es_extended`) is ensured *before* combatCache, so framework auto-detection finds it running on start — see [Configuration](/combatcache/configuration/#framework-and-debug).
+
+</Step>
+<Step>
+
+### Restart your server
+
+</Step>
+</Steps>
+
+## Next steps
+
+Head to [Configuration](/combatcache/configuration/) to set up `settings.lua`, or straight to [Access & Commands](/combatcache/access/) to configure staff and emergency-job permissions.

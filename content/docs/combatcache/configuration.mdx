@@ -1,0 +1,217 @@
+---
+title: Configuration
+description: General settings.lua options
+---
+
+All configuration lives in `settings.lua`. Every option is documented with comments in the file itself — this page groups them so you can see what you actually need to touch to get set up. For staff/emergency-job access and the `/combatcache` command, see [Access & Commands](/combatcache/access/).
+
+## Framework and debug
+
+```lua
+Settings = {
+    -- 'auto' detects Qbox or ESX automatically, or set manually to 'qbox' / 'esx'
+    Framework = 'auto',
+
+    -- Detailed console logging for development. Keep false in production.
+    debug = false,
+}
+```
+
+## Commands
+
+```lua
+Settings = {
+    Commands = {
+        combatcache = 'combatcache', -- view a combat log
+        clearcache = 'clearcache',   -- debug only: wipe your own log
+        testcache = 'testcache',     -- debug only: inject fake test entries
+    },
+}
+```
+
+Rename any of these if they collide with another resource's command. `clearcache`/`testcache` only get registered while `debug = true`.
+
+## Data retention and tracking
+
+```lua
+Settings = {
+    dataRetention = 60 * 60,          -- seconds a combat log entry is kept before being pruned
+    cleanupCacheInterval = 5 * 60,    -- how often the prune sweep runs
+
+    serverHealthTrackingInterval = 1, -- seconds between the server's own health/armor snapshots
+    dataExpiration = 120,             -- seconds before a stale tracking snapshot is dropped
+    dataInterval = 60,                -- how often expired snapshots are cleaned up
+}
+```
+
+The server keeps its own periodic health/armor snapshot per connected player — this is what lets it compute `healthLost`/`armorLost` itself instead of trusting a client's claim. These settings control how long that snapshot and the combat log itself are kept around.
+
+## Hit reporting and corroboration
+
+```lua
+Settings = {
+    recordHitCooldownMs = 50,           -- ms, per-player anti-flood limit on reporting a hit
+    corroborationWindow = 2000,         -- ms, how long a hit waits for the other participant's own client to also report it
+    corroborationSweepInterval = 1,     -- seconds, how often pending hits are checked for an expired corroborationWindow
+    plausibilityHealthTolerance = 15,   -- raw HP allowed between a reported newHealth and the server's own reading
+    plausibilityMaxDistance = 300,      -- meters, log-only sanity ceiling (not a hard reject)
+}
+```
+
+Every hit is reported to the server, but doesn't commit right away — it's held until the *other* participant's own client independently reports the same hit (that's corroboration), or the window expires, in which case it still commits but gets flagged unconfirmed rather than discarded. `recordHitCooldownMs` needs to comfortably clear realistic automatic-weapon fire rates or you'll drop legitimate hits — 50ms is intentionally generous.
+
+## View delay
+
+```lua
+Settings = {
+    minViewAge = 2 * 60,        -- seconds before a fresh hit becomes visible in default mode
+    maxViewAge = 60 * 60,       -- seconds after which it's no longer shown in default mode
+    emergencyMaxViewAge = 60 * 60, -- seconds a hit stays visible in emergency mode
+}
+```
+
+`minViewAge` is the anti-metagame delay — a player can't immediately check `/combatcache` to see who just shot them mid-fight. Staff (`full` mode) always sees everything immediately regardless of these settings; this only applies to a player viewing their own log.
+
+## Health display
+
+```lua
+Settings = {
+    normalizeHealth = true,  -- display health on a 0-100 scale (GTA peds have a 100 HP buffer)
+    timeFormat = 'hh:mm:ss', -- 'hh:mm:ss' or 'relative' (e.g. "5min ago")
+}
+```
+
+## Resource trust
+
+```lua
+Settings = {
+    StrictResourceCheck = true,
+    AllowedResources = {
+        ['combatCache'] = true,
+    },
+}
+```
+
+`invoker` (which resource reported a hit) can't actually be verified server-side over the network, so this is logged for visibility only — not treated as access control. Add your own resource names here if you want them to stop showing up in `[DETECTION]` console logs when calling [`AddCombatEntry`](/combatcache/exports/).
+
+## Staff and emergency-job access
+
+```lua
+Settings = {
+    StaffGroups = {
+        admin = true,
+        god = true,
+        superadmin = true,
+    },
+
+    EmergencyJobs = {
+        ['police'] = true,
+        ['ambulance'] = true,
+    },
+}
+```
+
+Covered in full on [Access & Commands](/combatcache/access/) — this is what controls who can view another player's log.
+
+## Emergency ox_target option
+
+```lua
+Settings = {
+    EmergencyTarget = {
+        enabled = true, -- set false to disable the ox_target integration entirely
+
+        name = 'show_combatcache',
+        icon = 'fa-solid fa-notes-medical',
+        label = 'Check injuries',
+        distance = 1.5,
+
+        progressDuration = 3000,
+        progressLabel = 'Examining injuries...',
+        animDict = 'anim@amb@clubhouse@tutorial@bkr_tut_ig3@',
+        animClip = 'machinic_loop_mechandplayer',
+
+        notifyTitle = 'Examination complete',
+        notifyDescription = 'Injuries have been logged. Press F8 to view the report.',
+        notifyType = 'success',
+        notifyDuration = 5000,
+        notifyPosition = 'top-right',
+        notifyIcon = 'file-medical',
+    },
+}
+```
+
+The `ox_target` option on-duty `EmergencyJobs` players use to pull up someone's emergency-mode log in-character. `distance`/`progressDuration` are gameplay tuning, the rest is display text.
+
+## Weapon and ammo labels
+
+```lua
+Settings = {
+    -- Fallback ammo-type label for weapons ox_inventory's own Ammo table
+    -- doesn't cover (e.g. melee weapons, which have no real ammo type).
+    ManualAmmoLabel = {
+        -- [`WEAPON_KNIFE`] = 'Melee',
+    },
+}
+```
+
+Empty by default. Only needed for custom weapons where ox_inventory doesn't already provide a sensible ammo label.
+
+## Instant headshot kill
+
+```lua
+Settings = {
+    headshotInstakill = true, -- kill the local player instantly on a qualifying headshot
+    syncHeadshotKill = true,  -- report it to the server so it shows up in the log too
+
+    -- Weapons that can trigger this. Empty by default - the feature is a
+    -- no-op until you add weapon hashes here.
+    instaHeadshotWapens = {
+        -- [`WEAPON_SNIPERRIFLE`] = true,
+    },
+
+    -- Which bones qualify, and the chance per bone.
+    killBones = {
+        [31086] = { chance = 1.00, label = 'Head' },
+        [39317] = { chance = 0.85, label = 'Neck' },
+        -- ...
+    },
+}
+```
+
+Both `instaHeadshotWapens` and `killBones` need entries for this to do anything — it's disabled by default so a fresh install doesn't impose a specific weapon balance decision on you.
+
+## Notifications
+
+```lua
+Settings = {
+    -- Shown after /combatcache prints your own default-mode log.
+    LogReadyNotify = {
+        title = 'CombatLog',
+        description = 'Press F8 to view the report.',
+        type = 'success',
+        duration = 5000,
+        position = 'top-right',
+        icon = 'file-medical',
+    },
+}
+```
+
+## Log columns and view modes
+
+```lua
+Settings = {
+    LogColumns = {
+        -- key = { header, width, format(entry, viewerServerId, timeStr) }
+        attacker = { header = 'ATTACKER', width = 14, format = function(v, myId) ... end },
+        -- ...
+    },
+
+    LogModes = {
+        default   = { columns = { 'attacker', 'victim', 'bone', ... } },
+        full      = { columns = { 'attacker', 'victim', 'bone', ..., 'confirmed' } },
+        emergency = { columns = { 'attacker', 'victim', 'bone', ..., 'confirmed' } },
+    },
+}
+```
+
+Advanced — most servers won't need to touch this. Each column is a small formatter function, and each mode just picks which columns to show. `full` and `emergency` are staff/emergency-only (see [Access & Commands](/combatcache/access/)); `default` is what a regular player sees for their own log.
