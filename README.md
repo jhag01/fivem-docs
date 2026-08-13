@@ -1,9 +1,10 @@
-# fumadocs-scaffold
+# FiveM Docs
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+Documentation for private FiveM resources, built with [Fumadocs](https://fumadocs.dev) on Next.js.
 
-It is a Next.js app with [Static Export](https://nextjs.org/docs/app/guides/static-exports) configured.
+**Live site: https://jhag01.github.io/fivem-docs/**
+
+The site is statically exported and deployed to GitHub Pages automatically on every push to `main` (see [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)).
 
 Run development server:
 
