@@ -1,0 +1,74 @@
+---
+title: Healing
+description: Tracking bandages, revives, and any other heal source alongside damage
+---
+
+Heal entries live in the same log as damage entries, and are verified the same way — the server never trusts a claimed heal amount, it only records a heal once its own health tracking shows the target actually gained health. There's no such thing as a fabricated 25 HP bandage in the log; if the server's own reading doesn't back it up, the report is silently dropped.
+
+## Reporting a heal
+
+There's no in-game event for "the player got healed" the way `CEventNetworkEntityDamage` exists for damage, so a heal has to be reported to combatCache rather than detected by it. Three ways that happens:
+
+1. [`AddHealEntry`](/combatcache/exports/#addhealentry) — the general-purpose export, for any custom script (a medkit, a scripted revive, anything).
+2. Automatic self-heal item detection, via `ox_inventory`.
+3. Automatic revive detection, via ESX/Qbox's default ambulance job event.
+
+The last two are opt-in and off by default.
+
+## Self-heal items (ox_inventory)
+
+```lua
+Settings = {
+    -- item name (as registered in your inventory's items.lua) = display label
+    HealingItems = {
+        -- bandage = 'Bandage',
+        -- medkit = 'Medkit',
+    },
+}
+```
+
+Empty by default. Add your server's bandage/medkit item names and combatCache listens for `ox_inventory`'s item-use event and reports a self-heal whenever one of these is used.
+
+<Callout type="warn" title="Self-use only">
+  This only covers using an item on yourself. A medic applying an item to someone else isn't covered here — that depends entirely on how your specific ambulance job/inventory setup reports the target, which varies too much to hook generically. Use [`AddHealEntry`](/combatcache/exports/#addhealentry) for that case instead, called from wherever your targeted-item logic already runs server-side.
+</Callout>
+
+## Revive auto-hook
+
+```lua
+Settings = {
+    AutoReviveHook = true,
+}
+```
+
+When enabled, combatCache listens for the default ambulance job's revive event on each framework — `esx_ambulancejob:revive` (ESX) or `hospital:client:Revive` (Qbox, shared by most QB-derived ambulance jobs) — and logs a heal the moment it fires.
+
+<Callout type="warn" title="Verify this matches your ambulance job">
+  These are the most common event names for each framework's *default* ambulance job, not a guarantee. If you run a custom or forked ambulance job, it may fire a different event entirely — check `bridge/esx.lua` / `bridge/qbox.lua` and adjust the event name there, or set `AutoReviveHook = false` and call `AddHealEntry` yourself from your ambulance job's own revive logic instead.
+</Callout>
+
+Both events fire on the revived player's own client and don't carry the reviving player's ID in the default ambulance job, so these entries are logged with no healer — shown as `SYSTEM` in the log's SOURCE column rather than a player ID.
+
+## Verification
+
+Exactly like damage: the server reads the target's real health via its own tracking (the same snapshot described in [Data retention and tracking](/combatcache/configuration/#data-retention-and-tracking)), and computes `healthGained` itself. A report — from the export, the ox_inventory hook, or the revive hook — is only a trigger to go check; it never supplies the actual number. If the server's own reading shows no increase, nothing is logged.
+
+## Known limitation: no corroboration
+
+Damage hits require the *other* participant's own client to independently corroborate them before committing (see [Hit reporting and corroboration](/combatcache/configuration/#hit-reporting-and-corroboration)). Heals deliberately skip that step — a respawn-timer heal or a self-applied bandage has no second party to corroborate against, so requiring one would make those cases impossible to log at all.
+
+The tradeoff: the server can always verify *how much* health someone gained, but for who gets credit as the healer, it currently trusts whichever client reported it. A compromised client could claim credit for a heal it didn't actually cause — the numbers in the log would still be real, just misattributed. Damage doesn't have this gap because the victim's own client has to agree on who the attacker was.
+
+If misattributed heals are a concern for your server (e.g. you rely on the log to verify EMS revive activity), the fix would be adding the same two-party corroboration heals currently skip — at the cost of losing single-source heals like respawn timers, which have nobody to corroborate with.
+
+## How it renders
+
+Heal entries show up in the same `/combatcache` log as damage, distinguished by the `kind` column (`DMG` / `HEAL`). A few columns fall back to heal-specific data instead of erroring on missing damage fields — see [Log columns and view modes](/combatcache/configuration/#log-columns-and-view-modes):
+
+| Column | For damage | For a heal |
+|---|---|---|
+| SOURCE | Attacker's ID (or `YOU`) | Healer's ID, or `SYSTEM` if none |
+| DETAIL | Bone hit | Heal method (`Bandage`, `Revive`, ...) |
+| CHANGE | `-N` in red | `+N` in green |
+| WEAPON/ITEM | Weapon label | Item name, if any |
+| AMMO TYPE | Ammo type | `N/A` |

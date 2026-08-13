@@ -156,6 +156,24 @@ Settings = {
 
 Empty by default. Only needed for custom weapons where ox_inventory doesn't already provide a sensible ammo label.
 
+## Healing
+
+```lua
+Settings = {
+    -- item name (as registered in your inventory's items.lua) = display label
+    HealingItems = {
+        -- bandage = 'Bandage',
+        -- medkit = 'Medkit',
+    },
+
+    -- Auto-log a heal when the local player is revived, via the default
+    -- ambulance job's revive event for your framework.
+    AutoReviveHook = true,
+}
+```
+
+Covered in full on [Healing](/combatcache/healing/) — `HealingItems` opts specific ox_inventory items into self-heal detection (empty/off by default), `AutoReviveHook` toggles the built-in ESX/Qbox revive listener.
+
 ## Instant headshot kill
 
 ```lua
@@ -215,3 +233,5 @@ Settings = {
 ```
 
 Advanced — most servers won't need to touch this. Each column is a small formatter function, and each mode just picks which columns to show. `full` and `emergency` are staff/emergency-only (see [Access & Commands](/combatcache/access/)); `default` is what a regular player sees for their own log.
+
+The same columns are shared between damage and heal entries — several of them (`bone`, `health_lost`, `weapon`, `ammo_type`) branch on the entry's `type` to show heal-appropriate text instead. See [How it renders](/combatcache/healing/#how-it-renders) for the exact mapping.

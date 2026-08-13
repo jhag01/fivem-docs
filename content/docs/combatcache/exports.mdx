@@ -1,11 +1,11 @@
 ---
 title: Exports
-description: The server export API, with an example and the security model
+description: The server export API, with examples and the security model
 ---
 
-Use this export from any other resource to log a hit that didn't come from a normal player-vs-player gunfight — a taser, a scripted damage source, anything that isn't the game's own `CEventNetworkEntityDamage` event.
+Use these exports from any other resource to log a hit or a heal that didn't come from a normal player-vs-player gunfight or one of the [built-in heal hooks](/combatcache/healing/) — a taser, a medkit, a scripted revive, anything that isn't already covered.
 
-## Server-side
+## `AddCombatEntry`
 
 ```lua
 -- Report a hit on targetServerId.
@@ -18,8 +18,6 @@ exports['combatCache']:AddCombatEntry(targetServerId, weaponName, damageOverride
 
 The attacker is always whichever resource/player's client calls this — there's no `attackerOverride` parameter, so it's always self-attributed to the caller.
 
-## Example
-
 ```lua
 -- server-side, from wherever your taser item's use logic actually runs
 RegisterNetEvent('mytaser:server:use', function(targetServerId)
@@ -28,10 +26,35 @@ RegisterNetEvent('mytaser:server:use', function(targetServerId)
 end)
 ```
 
-## Why `damageOverride` doesn't do anything
+## `AddHealEntry`
 
-combatCache doesn't trust a claimed damage number from *any* source, including its own export — the server always computes `healthLost` from its own tracked health snapshot, the same as it does for a normal reported gunfight hit (see [Configuration](/combatcache/configuration/#hit-reporting-and-corroboration)). A hit logged through this export only shows real damage numbers if your script's action actually changes the target's health; otherwise it's logged with `healthLost = 0`, which is an accurate reflection of what the server could actually verify happened.
+```lua
+-- Report a heal on targetServerId.
+-- methodLabel and item are display text, shown in the DETAIL and WEAPON/ITEM
+-- columns respectively - see the healing table at /combatcache/healing/#how-it-renders.
+-- healerOverride reports the heal on behalf of someone else (e.g. an
+-- ambulance job reviving a downed player); leave it nil and set noHealer =
+-- true instead for heals with no real healer (self-applied item, respawn
+-- timer) - otherwise the caller is self-attributed as the healer, same as
+-- AddCombatEntry.
+exports['combatCache']:AddHealEntry(targetServerId, methodLabel, item, healerOverride, noHealer)
+```
+
+```lua
+-- server-side, from wherever your medkit item's use logic actually runs,
+-- called by the medic administering it
+RegisterNetEvent('mymedkit:server:use', function(patientServerId)
+    -- ...apply the heal...
+    exports['combatCache']:AddHealEntry(patientServerId, 'Medkit', 'medkit')
+end)
+```
+
+## Why the reported amount doesn't do anything
+
+combatCache doesn't trust a claimed damage or heal number from *any* source, including its own exports — the server always computes `healthLost`/`healthGained` from its own tracked health snapshot, the same as it does for a normal reported gunfight hit (see [Configuration](/combatcache/configuration/#hit-reporting-and-corroboration)). An entry logged through either export only shows real numbers if your script's action actually changed the target's health; a hit with no real change is logged with `healthLost = 0`, and a heal with no real change isn't logged at all (see [Verification](/combatcache/healing/#verification)) — both are an accurate reflection of what the server could actually verify happened.
 
 <Callout type="error" title="Never trust the client">
-  This export is called from your own server-side logic, so there's nothing to validate on the caller's identity beyond the existing `invoker` visibility check (see [Resource trust](/combatcache/configuration/#resource-trust)). But the same principle applies throughout this resource: nothing about *who got hit, how hard, or whether it happened at all* is ever taken on a client's word alone. Every hit — whether it came from this export or a real gunfight — goes through the same server-side health verification before it's logged.
+  These exports are called from your own server-side logic, so there's nothing to validate on the caller's identity beyond the existing `invoker` visibility check (see [Resource trust](/combatcache/configuration/#resource-trust)). But the same principle applies throughout this resource: nothing about *who was involved, how much health changed, or whether it happened at all* is ever taken on a client's word alone. Every entry — whether it came from an export, a real gunfight, or a heal hook — goes through the same server-side health verification before it's logged.
+
+  The one exception is heal *attribution*: unlike damage, a heal doesn't require the other participant to corroborate who caused it, so the healer ID can be spoofed even though the healed amount can't. See [Known limitation: no corroboration](/combatcache/healing/#known-limitation-no-corroboration).
 </Callout>

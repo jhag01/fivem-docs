@@ -1,16 +1,17 @@
 ---
 title: Overview
-description: A server-authoritative combat log for FiveM, with staff and emergency-job access
+description: A server-authoritative combat and healing log for FiveM, with staff and emergency-job access
 ---
 
-combatCache tracks player combat hits and gives staff and on-duty emergency services a viewable log of who hit whom, with what, and how hard. The server is the source of truth for every entry — health, armor, distance, and speed are all read from the server's own tracked state, never trusted from a client's report, and a hit only commits once the server has independently corroborated it actually happened.
+combatCache tracks player combat hits and heals, and gives staff and on-duty emergency services a viewable log of who hit or healed whom, with what, and how much. The server is the source of truth for every entry — health, armor, distance, and speed are all read from the server's own tracked state, never trusted from a client's report, and a hit only commits once the server has independently corroborated it actually happened.
 
 <ResourceLinks repo="combatCache" />
 
 ## Features
 
-- Server-authoritative combat log — clients report hits, they don't hold or serve their own copy
+- Server-authoritative combat log — clients report hits and heals, they don't hold or serve their own copy
 - Corroboration — a hit only commits once the other participant's own client also reports it, or after a short grace period if it doesn't (logged either way, but marked unconfirmed if it wasn't)
+- Heal tracking — bandages, revives, and any custom heal source, verified against the server's own health tracking the same as damage
 - Plausibility checks reject a reported fatal hit the server's own health tracking can't verify
 - Framework auto-detection — supports Qbox and ESX out of the box
 - Staff and on-duty emergency-job (police/ambulance) access, checked both ace- and framework-group-based
@@ -27,7 +28,7 @@ combatCache tracks player combat hits and gives staff and on-duty emergency serv
 
 Also requires a supported framework: **Qbox** (`qbx_core`) or **ESX** (`es_extended`).
 
-Optional: [ox_inventory](https://github.com/overextended/ox_inventory) for accurate weapon/ammo labels (a bundled fallback list is used without it), and [ox_target](https://github.com/overextended/ox_target) for the in-game "Check injuries" option — the whole integration can be disabled if you don't use it.
+Optional: [ox_inventory](https://github.com/overextended/ox_inventory) for accurate weapon/ammo labels and automatic self-heal item detection (a bundled fallback list is used without it), and [ox_target](https://github.com/overextended/ox_target) for the in-game "Check injuries" option — the whole integration can be disabled if you don't use it.
 
 ## Next steps
 
@@ -35,4 +36,5 @@ Optional: [ox_inventory](https://github.com/overextended/ox_inventory) for accur
   <Card title="Installation" href="/combatcache/installation/" description="Get combatCache running on your server" />
   <Card title="Configuration" href="/combatcache/configuration/" description="General settings.lua options" />
   <Card title="Access & Commands" href="/combatcache/access/" description="Staff, emergency jobs, and the /combatcache command" />
+  <Card title="Healing" href="/combatcache/healing/" description="Bandages, revives, and the AddHealEntry export" />
 </Cards>
